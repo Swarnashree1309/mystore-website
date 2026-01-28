@@ -21,7 +21,7 @@ pipeline {
                 sh '''
                 docker stop mystore || true
                 docker rm mystore || true
-                docker run -d -p 8080:80 --name mystore mystore-site
+                docker run -d -p 9090:80 --name mystore mystore-site
                 '''
             }
         }
