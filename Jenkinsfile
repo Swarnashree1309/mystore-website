@@ -4,10 +4,11 @@ pipeline {
     stages {
 
         stage('Clone Repo') {
-            steps {
-                git 'https://github.com/anu-rb06/mystore-website.git'
-            }
-        }
+    steps {
+        git branch: 'main',
+            url: 'https://github.com/anu-rb06/mystore-website.git'
+    }
+}
 
         stage('Build Docker Image') {
             steps {
