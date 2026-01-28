@@ -5,7 +5,7 @@ pipeline {
 
         stage('Clone Repo') {
             steps {
-                git 'https://github.com/yourusername/your-repo.git'
+                git 'https://github.com/anu-rb06/mystore-website.git'
             }
         }
 
