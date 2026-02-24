@@ -26,21 +26,28 @@ pipeline {
         stage('Determine Active Environment') {
             steps {
                 script {
+                    def ACTIVE = "none"
                     if (fileExists(env.ACTIVE_FILE)) {
                         ACTIVE = sh(script: "cat $ACTIVE_FILE", returnStdout: true).trim()
-                    } else {
-                        ACTIVE = "none"
                     }
+
+                    def NEW_ENV
+                    def NEW_CONTAINER
+                    def OLD_CONTAINER
 
                     if (ACTIVE == "blue-target") {
                         NEW_ENV = "Green-target"
                         NEW_CONTAINER = env.GREEN_CONTAINER
                         OLD_CONTAINER = env.BLUE_CONTAINER
                     } else {
-                        NEW_ENV = "blue-target"
+                        NEW_ENV = "blue"
                         NEW_CONTAINER = env.BLUE_CONTAINER
                         OLD_CONTAINER = env.GREEN_CONTAINER
                     }
+
+                    env.NEW_ENV = NEW_ENV
+                    env.NEW_CONTAINER = NEW_CONTAINER
+                    env.OLD_CONTAINER = OLD_CONTAINER
 
                     echo "Active: ${ACTIVE}"
                     echo "Deploying to: ${NEW_ENV}"
@@ -50,39 +57,30 @@ pipeline {
 
         stage('Deploy to Inactive Environment') {
             steps {
-                script {
-                    sh """
-                    docker stop ${NEW_CONTAINER} || true
-                    docker rm ${NEW_CONTAINER} || true
-                    docker run -d --name ${NEW_CONTAINER} ${IMAGE_NAME}
-                    """
-                }
+                sh """
+                docker stop ${NEW_CONTAINER} || true
+                docker rm ${NEW_CONTAINER} || true
+                docker run -d --name ${NEW_CONTAINER} ${IMAGE_NAME}
+                """
             }
         }
 
         stage('Switch Traffic') {
             steps {
-                script {
-                    sh """
-                    docker stop proxy || true
-                    docker rm proxy || true
-                    docker run -d -p 9090:80 --name proxy ${IMAGE_NAME}
-                    """
+                sh """
+                # Stop old active container if running on port 9090
+                docker stop ${OLD_CONTAINER} || true
+                docker rm ${OLD_CONTAINER} || true
 
-                    sh "echo ${NEW_ENV} > ${ACTIVE_FILE}"
-                }
+                # Restart new container with port binding
+                docker stop ${NEW_CONTAINER}
+                docker rm ${NEW_CONTAINER}
+                docker run -d -p 9090:80 --name ${NEW_CONTAINER} ${IMAGE_NAME}
+
+                echo ${NEW_ENV} > ${ACTIVE_FILE}
+                """
             }
         }
 
-        stage('Stop Old Environment') {
-            steps {
-                script {
-                    sh """
-                    docker stop ${OLD_CONTAINER} || true
-                    docker rm ${OLD_CONTAINER} || true
-                    """
-                }
-            }
-        }
     }
 }
