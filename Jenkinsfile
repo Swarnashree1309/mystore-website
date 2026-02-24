@@ -35,8 +35,8 @@ pipeline {
                     def NEW_CONTAINER
                     def OLD_CONTAINER
 
-                    if (ACTIVE == "blue-target") {
-                        NEW_ENV = "Green-target"
+                    if (ACTIVE == "blue") {
+                        NEW_ENV = "green"
                         NEW_CONTAINER = env.GREEN_CONTAINER
                         OLD_CONTAINER = env.BLUE_CONTAINER
                     } else {
