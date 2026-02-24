@@ -64,19 +64,19 @@ pipeline {
                 """
             }
         }
-
         stage('Switch Traffic') {
             steps {
                 sh """
-                # Stop old active container if running on port 9090
-                docker stop ${OLD_CONTAINER} || true
-                docker rm ${OLD_CONTAINER} || true
-
+                # Kill anything using port 9090
+                docker ps -q --filter "publish=9090" | xargs -r docker rm -f
+        
+                # Remove old active container
+                docker rm -f ${OLD_CONTAINER} || true
+        
                 # Restart new container with port binding
-                docker stop ${NEW_CONTAINER}
-                docker rm ${NEW_CONTAINER}
+                docker rm -f ${NEW_CONTAINER} || true
                 docker run -d -p 9090:80 --name ${NEW_CONTAINER} ${IMAGE_NAME}
-
+        
                 echo ${NEW_ENV} > ${ACTIVE_FILE}
                 """
             }
