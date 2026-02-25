@@ -1,7 +1,7 @@
 pipeline {
     agent { label 'docker1 agent' }
 
-    environment {
+    environment { 
         IMAGE_NAME = "mystore-site"
         BLUE_CONTAINER = "mystore-blue"
         GREEN_CONTAINER = "mystore-green"
